@@ -1,9 +1,12 @@
-import dotenv from "dotenv";
-dotenv.config();
-
 import nodemailer from "nodemailer";
 
-export const sendOtpEmail = async (email, name, otp) => {
+const sendOtpEmail = async (email, name, otp) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error(
+      "EMAIL_USER or EMAIL_PASS environment variable is missing"
+    );
+  }
+
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -13,26 +16,29 @@ export const sendOtpEmail = async (email, name, otp) => {
   });
 
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: `"YourTube Security" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "YourTube Login Verification OTP",
     html: `
-      <h2>Hello ${name},</h2>
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <h2>YourTube Login Verification</h2>
 
-      <p>Your One-Time Password (OTP) for login is:</p>
+        <p>Hello ${name || "User"},</p>
 
-      <h1 style="letter-spacing:5px;">${otp}</h1>
+        <p>Your OTP for login verification is:</p>
 
-      <p>This OTP is valid for <b>5 minutes</b>.</p>
+        <h1 style="letter-spacing: 6px;">${otp}</h1>
 
-      <p>If you did not attempt to log in, please ignore this email.</p>
+        <p>This OTP will expire in 5 minutes.</p>
 
-      <br>
-
-      <p>Regards,</p>
-      <h3>YourTube Team</h3>
+        <p>If you did not attempt to sign in, please ignore this email.</p>
+      </div>
     `,
   };
 
   await transporter.sendMail(mailOptions);
+
+  console.log(`OTP email sent to ${email}`);
 };
+
+export default sendOtpEmail;

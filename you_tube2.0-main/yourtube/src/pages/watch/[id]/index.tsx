@@ -3,97 +3,176 @@ import RelatedVideos from "@/components/RelatedVideos";
 import VideoInfo from "@/components/VideoInfo";
 import Videopplayer from "@/components/Videopplayer";
 import WatchPartyButton from "@/components/watchparty/WatchPartyButton";
-import axiosInstance from "@/lib/axiosinstance";
 import DownloadButton from "@/components/DownloadButton";
+import axiosInstance from "@/lib/axiosinstance";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 
-const index = () => {
+const demoVideos = [
+  {
+    _id: "demo-video-1",
+    videotitle: "Amazing Nature Documentary",
+    filename: "nature.mp4",
+    filetype: "video/mp4",
+    filepath: "/video/vdo.mp4",
+    filesize: "25 MB",
+    videochanel: "Nature World",
+    Like: 1250,
+    views: 45000,
+    uploader: "Nature World",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    _id: "demo-video-2",
+    videotitle: "Cooking Tutorial: Perfect Pasta",
+    filename: "cooking.mp4",
+    filetype: "video/mp4",
+    filepath: "/video/vdo.mp4",
+    filesize: "18 MB",
+    videochanel: "Chef's Kitchen",
+    Like: 890,
+    views: 23000,
+    uploader: "Chef Master",
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    _id: "demo-video-3",
+    videotitle: "Learn Web Development",
+    filename: "web-development.mp4",
+    filetype: "video/mp4",
+    filepath: "/video/vdo.mp4",
+    filesize: "30 MB",
+    videochanel: "Code Academy",
+    Like: 2100,
+    views: 67000,
+    uploader: "Code Academy",
+    createdAt: new Date(Date.now() - 172800000).toISOString(),
+  },
+  {
+    _id: "demo-video-4",
+    videotitle: "Beautiful Travel Destinations",
+    filename: "travel.mp4",
+    filetype: "video/mp4",
+    filepath: "/video/vdo.mp4",
+    filesize: "22 MB",
+    videochanel: "Travel Explorer",
+    Like: 1750,
+    views: 52000,
+    uploader: "Travel Explorer",
+    createdAt: new Date(Date.now() - 259200000).toISOString(),
+  },
+];
+
+const WatchVideoPage = () => {
   const router = useRouter();
   const { id } = router.query;
 
-  const [videos, setvideo] = useState<any>(null);
-  const [video, setvide] = useState<any>(null);
-  const [loading, setloading] = useState(true);
+  const [currentVideo, setCurrentVideo] = useState<any>(null);
+  const [allVideos, setAllVideos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchvideo = async () => {
-      if (!id || typeof id !== "string") return;
+    if (!router.isReady || typeof id !== "string") {
+      return;
+    }
 
+    const fetchVideo = async () => {
       try {
-        const res = await axiosInstance.get("/video/getall");
-        const currentVideo = res.data?.filter((vid: any) => vid._id === id);
+        const response = await axiosInstance.get("/video/getall");
 
-        setvideo(currentVideo[0]);
-        setvide(res.data);
+        const receivedVideos = Array.isArray(response.data)
+          ? response.data
+          : [];
+
+        if (receivedVideos.length > 0) {
+          const selectedVideo = receivedVideos.find(
+            (video: any) => video._id === id
+          );
+
+          setAllVideos(receivedVideos);
+          setCurrentVideo(selectedVideo || receivedVideos[0]);
+        } else {
+          const selectedDemoVideo = demoVideos.find(
+            (video) => video._id === id
+          );
+
+          setAllVideos(demoVideos);
+          setCurrentVideo(selectedDemoVideo || demoVideos[0]);
+        }
       } catch (error) {
-        console.log(error);
+        console.log("Backend unavailable. Showing demo video.", error);
+
+        const selectedDemoVideo = demoVideos.find(
+          (video) => video._id === id
+        );
+
+        setAllVideos(demoVideos);
+        setCurrentVideo(selectedDemoVideo || demoVideos[0]);
       } finally {
-        setloading(false);
+        setLoading(false);
       }
     };
 
-    fetchvideo();
-  }, [id]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!videos) {
-    return <div>Video not found</div>;
-  }
+    fetchVideo();
+  }, [id, router.isReady]);
 
   const handleNextVideo = () => {
-    const currentIndex = video.findIndex((v: any) => v._id === videos._id);
+    const currentIndex = allVideos.findIndex(
+      (video) => video._id === currentVideo?._id
+    );
 
-    if (currentIndex < video.length - 1) {
-      router.push(`/watch/${video[currentIndex + 1]._id}`);
+    if (currentIndex >= 0 && currentIndex < allVideos.length - 1) {
+      router.push(`/watch/${allVideos[currentIndex + 1]._id}`);
     } else {
-      alert("No next video available.");
+      router.push(`/watch/${allVideos[0]._id}`);
     }
   };
 
+  if (loading) {
+    return <div className="p-6">Loading video...</div>;
+  }
+
+  if (!currentVideo) {
+    return <div className="p-6">Video not found.</div>;
+  }
+
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="mx-auto max-w-7xl p-4">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
+            <Videopplayer video={currentVideo} />
 
-          {/* Left Section */}
-          <div className="lg:col-span-2 space-y-4">
-
-            <Videopplayer video={videos} />
-
-            {/* Next Video Button */}
             <div className="flex justify-end">
               <button
                 onClick={handleNextVideo}
-                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg"
+                className="rounded-lg bg-red-600 px-5 py-2 text-white hover:bg-red-700"
               >
                 Next Video ▶
               </button>
             </div>
 
-            {/* Download & Watch Party */}
-            <div className="flex justify-end gap-3">
-              <DownloadButton videoId={videos._id} />
-              <WatchPartyButton />
-            </div>
+            {!currentVideo._id.startsWith("demo-video") && (
+              <div className="flex justify-end gap-3">
+                <DownloadButton videoId={currentVideo._id} />
+                <WatchPartyButton />
+              </div>
+            )}
 
-            <VideoInfo video={videos} />
+            <VideoInfo video={currentVideo} />
 
-            <Comments videoId={id} />
+            {!currentVideo._id.startsWith("demo-video") && (
+              <Comments videoId={currentVideo._id} />
+            )}
           </div>
 
-          {/* Right Section */}
           <div className="space-y-4">
-            <RelatedVideos videos={video} />
+            <RelatedVideos videos={allVideos} />
           </div>
-
         </div>
-      </div> 
+      </div>
     </div>
   );
 };
 
-export default index; 
+export default WatchVideoPage;

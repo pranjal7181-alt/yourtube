@@ -54,10 +54,7 @@ export default function VideoPlayer({ video }: VideoPlayerProps) {
         onLoadStart={() => setLoading(true)}
         onCanPlay={() => setLoading(false)}
       >
-        <source
-  src="/video/vdo.mp4"
-  type="video/mp4"
-/>
+        <source src="/video/vdo.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 

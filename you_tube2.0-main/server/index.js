@@ -17,7 +17,7 @@ import historyrroutes from "./routes/history.js";
 import commentroutes from "./routes/comment.js";
 import streamroutes from "./routes/stream.js";
 import downloadroutes from "./routes/download.js";
-import subscriptionRoutes from "./Routes/subscription.js";
+import subscriptionRoutes from "./routes/subscription.js";
 import translateRoutes from "./routes/translate.js";
 
 dotenv.config();
